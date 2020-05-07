@@ -68,6 +68,7 @@ resource "vsphere_virtual_machine" "Linux" {
   num_cores_per_socket   = var.num_cores_per_socket
   cpu_hot_add_enabled    = var.cpu_hot_add_enabled
   cpu_hot_remove_enabled = var.cpu_hot_remove_enabled
+  cpu_share_level        = var.cpu_share_level
   memory                 = var.ram_size
   memory_hot_add_enabled = var.memory_hot_add_enabled
   guest_id               = data.vsphere_virtual_machine.template.guest_id
@@ -160,6 +161,7 @@ resource "vsphere_virtual_machine" "Windows" {
   num_cores_per_socket   = var.num_cores_per_socket
   cpu_hot_add_enabled    = var.cpu_hot_add_enabled
   cpu_hot_remove_enabled = var.cpu_hot_remove_enabled
+  cpu_share_level        = var.cpu_share_level
   memory                 = var.ram_size
   memory_hot_add_enabled = var.memory_hot_add_enabled
   guest_id               = data.vsphere_virtual_machine.template.guest_id

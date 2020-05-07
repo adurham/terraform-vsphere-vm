@@ -27,6 +27,11 @@ variable "cpu_number" {
   default     = 2
 }
 
+variable "cpu_share_level" {
+  description = "If true, set the level of CPU Shares."
+  default     = null
+}
+
 variable "ram_size" {
   description = "VM RAM size in megabytes"
   default     = 4096
@@ -65,7 +70,6 @@ variable "datastore" {
   description = "Datastore to deploy the VM."
   default     = ""
 }
-
 
 variable "vmfolder" {
   description = "The path to the folder to put this virtual machine in, relative to the datacenter that the resource pool is in."
