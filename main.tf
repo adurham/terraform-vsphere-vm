@@ -95,6 +95,7 @@ resource "vsphere_virtual_machine" "Linux" {
       unit_number      = template_disks.key
       thin_provisioned = data.vsphere_virtual_machine.template.disks[template_disks.key].thin_provisioned
       eagerly_scrub    = data.vsphere_virtual_machine.template.disks[template_disks.key].eagerly_scrub
+      io_share_level   = var.io_share_level != null ? var.io_share_level[template_disks.key] : null
     }
   }
 
@@ -108,6 +109,7 @@ resource "vsphere_virtual_machine" "Linux" {
       unit_number      = terraform_disks.key + local.template_disk_count
       thin_provisioned = var.thin_provisioned != null ? var.thin_provisioned[terraform_disks.key] : null
       eagerly_scrub    = var.eagerly_scrub != null ? var.eagerly_scrub[terraform_disks.key] : null
+      io_share_level   = var.io_share_level != null ? var.io_share_level[terraform_disks.key] : null
     }
   }
 
@@ -185,6 +187,7 @@ resource "vsphere_virtual_machine" "Windows" {
       unit_number      = template_disks.key
       thin_provisioned = data.vsphere_virtual_machine.template.disks[template_disks.key].thin_provisioned
       eagerly_scrub    = data.vsphere_virtual_machine.template.disks[template_disks.key].eagerly_scrub
+      io_share_level   = var.io_share_level != null ? var.io_share_level[template_disks.key] : null
     }
   }
 
@@ -198,6 +201,7 @@ resource "vsphere_virtual_machine" "Windows" {
       unit_number      = terraform_disks.key + local.template_disk_count
       thin_provisioned = var.thin_provisioned != null ? var.thin_provisioned[terraform_disks.key] : null
       eagerly_scrub    = var.eagerly_scrub != null ? var.eagerly_scrub[terraform_disks.key] : null
+      io_share_level   = var.io_share_level != null ? var.io_share_level[terraform_disks.key] : null
     }
   }
 

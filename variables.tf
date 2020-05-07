@@ -168,6 +168,12 @@ variable "eagerly_scrub" {
   default     = null
 }
 
+variable "io_share_level" {
+  description = "If true, this disk will get the io_share_level that is set."
+  type        = list
+  default     = null
+}
+
 variable "enable_disk_uuid" {
   description = "Expose the UUIDs of attached virtual disks to the virtual machine, allowing access to them in the guest."
   default     = null
