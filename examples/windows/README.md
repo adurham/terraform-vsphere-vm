@@ -13,7 +13,7 @@ Following example contains the bare minimum options to be configured for the Win
 ```hcl
 module "example-server-windowsvm-withdatadisk" {
   source        = "Terraform-VMWare-Modules/vm/vsphere"
-  version       = "1.0.2"
+  version       = "Latest X.X.X"
   vmtemp        = "TemplateName"
   instances     = 1
   vmname        = "example-server-windows"
@@ -32,7 +32,7 @@ module "example-server-windowsvm-withdatadisk" {
 ```hcl
 module "example-server-windowsvm-advanced" {
    source                 = "Terraform-VMWare-Modules/vm/vsphere"
-  version                = "1.0.2"
+  version                = "Latest X.X.X"
   dc                     = "Datacenter"
   vmrp                   = "cluster/Resources"
   vmfolder               = "Cattle"
@@ -53,9 +53,17 @@ module "example-server-windowsvm-advanced" {
     "test"       = ["", "192.168.0.3"]
   }
   data_disk_size_gb = [10, 5] // Aditional Disks to be used
+  disk_label                 = ["tpl-disk-1"]
+  data_disk_label            = ["label1", "label2"]
+  scsi_type = "lsilogic" # "pvscsi"
+  scsi_controller = 0 # template disk scsi_controller
+  data_disk_scsi_controller  = [0, 1]
+  disk_datastore             = "vsanDatastore"
+  data_disk_datastore        = ["vsanDatastore", "nfsDatastore"]
   thin_provisioned  = ["true", "false"]
   vmdns             = ["192.168.0.2", "192.168.0.1"]
   vmgateway         = "192.168.0.1"
+  network_type = ["vmxnet3", "vmxnet3"]
   tags = {
     "terraform-test-category"    = "terraform-test-tag"
     "terraform-test-category-02" = "terraform-test-tag-02"

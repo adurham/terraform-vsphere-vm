@@ -154,10 +154,63 @@ variable "memory_hot_add_enabled" {
   default     = null
 }
 
-variable "data_disk_size_gb" {
-  description = "Storage data disk size size"
+variable "disk_label" {
+  description = "Storage data disk labels"
   type        = list
   default     = []
+}
+
+variable "data_disk_label" {
+  description = "Storage data disk labels"
+  type        = list
+  default     = []
+}
+
+variable "data_disk_size_gb" {
+  description = "List of Storage data disk size"
+  type        = list
+  default     = []
+}
+
+variable "disk_datastore" {
+  description = "Define where the OS disk should be stored"
+  type        = string
+  default     = ""
+}
+
+variable "data_disk_datastore" {
+  description = "Define where the data disk should be stored, should be equal to number of defined data disks"
+  type        = list
+  default     = []
+  # validation {
+  #   condition     = length(var.disk_datastore) == 0 || length(var.disk_datastore) == length(var.data_disk_size_gb)
+  #       error_message = "The list of disk datastore must be equal in length to disk_size_gb"
+  # }
+}
+
+variable "data_disk_scsi_controller" {
+  description = "scsi_controller number for the data disk, should be equal to number of defined data disk"
+  type        = list
+  default     = []
+  # validation {
+  #   condition     = max(var.data_disk_scsi_controller...) < 4 && max(var.data_disk_scsi_controller...) > -1
+  #       error_message = "The scsi_controller must be between 0 and 3"
+  # }
+}
+variable "scsi_type" {
+  description = "scsi_controller type, acceptable values lsilogic,pvscsi "
+  type        = string
+  default     = ""
+}
+
+variable "scsi_controller" {
+  description = "scsi_controller number for the main OS disk"
+  type        = number
+  default     = 0
+  # validation {
+  #   condition     = var.scsi_controller < 4 && var.scsi_controller > -1
+  #       error_message = "The scsi_controller must be between 0 and 3"
+  # }
 }
 
 variable "thin_provisioned" {
@@ -183,6 +236,11 @@ variable "enable_disk_uuid" {
   default     = null
 }
 
+variable "network_type" {
+  description = "Define network type for each network interface"
+  type        = list
+  default     = null
+}
 
 #Linux Customization Variables
 variable "hw_clock_utc" {
@@ -279,4 +337,10 @@ variable "wait_for_guest_net_timeout" {
   description = "The amount of time, in minutes, to wait for an available IP address on this virtual machine's NICs. Older versions of VMware Tools do not populate this property. In those cases, this waiter can be disabled and the wait_for_guest_ip_timeout waiter can be used instead. A value less than 1 disables the waiter."
   default     = 5
   type        = number
+}
+
+variable "vm_depends_on" {
+  description = "Add any external depend on module here like vm_depends_on = [module.fw_core01.firewall]"
+  type        = any
+  default     = null
 }

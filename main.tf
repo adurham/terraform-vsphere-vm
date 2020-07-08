@@ -14,6 +14,18 @@ data "vsphere_datastore" "datastore" {
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
+data "vsphere_datastore" "disk_datastore" {
+  count         = var.disk_datastore != "" ? 1 : 0
+  name          = var.disk_datastore
+  datacenter_id = data.vsphere_datacenter.dc.id
+}
+
+data "vsphere_datastore" "data_disk_datastore" {
+  for_each      = toset(var.data_disk_datastore)
+  name          = each.key
+  datacenter_id = data.vsphere_datacenter.dc.id
+}
+
 data "vsphere_resource_pool" "pool" {
   name          = var.vmrp
   datacenter_id = data.vsphere_datacenter.dc.id
@@ -31,14 +43,16 @@ data "vsphere_virtual_machine" "template" {
 }
 
 data "vsphere_tag_category" "category" {
-  count = var.tags != null ? length(var.tags) : 0
-  name  = keys(var.tags)[count.index]
+  count      = var.tags != null ? length(var.tags) : 0
+  name       = keys(var.tags)[count.index]
+  depends_on = [var.vm_depends_on]
 }
 
 data "vsphere_tag" "tag" {
   count       = var.tags != null ? length(var.tags) : 0
   name        = var.tags[keys(var.tags)[count.index]]
   category_id = "${data.vsphere_tag_category.category[count.index].id}"
+  depends_on  = [var.vm_depends_on]
 }
 
 locals {
@@ -48,9 +62,9 @@ locals {
 
 // Cloning a Linux VM from a given template. Note: This is the default option!!
 resource "vsphere_virtual_machine" "Linux" {
-  count = var.is_windows_image != "true" ? var.instances : 0
-
-  name = "%{if var.vmnameliteral != ""}${var.vmnameliteral}%{else}${var.vmname}${count.index + 1}${var.vmnamesuffix}%{endif}"
+  count      = var.is_windows_image != "true" ? var.instances : 0
+  depends_on = [var.vm_depends_on]
+  name       = "%{if var.vmnameliteral != ""}${var.vmnameliteral}%{else}${var.vmname}${count.index + 1}${var.vmnamesuffix}%{endif}"
 
   resource_pool_id  = data.vsphere_resource_pool.pool.id
   folder            = var.vmfolder
@@ -72,7 +86,8 @@ resource "vsphere_virtual_machine" "Linux" {
   memory                 = var.ram_size
   memory_hot_add_enabled = var.memory_hot_add_enabled
   guest_id               = data.vsphere_virtual_machine.template.guest_id
-  scsi_type              = data.vsphere_virtual_machine.template.scsi_type
+  scsi_type              = var.scsi_type != "" ? var.scsi_type : data.vsphere_virtual_machine.template.scsi_type
+  scsi_controller_count  = length(var.data_disk_scsi_controller) > 0 ? max(max(var.data_disk_scsi_controller...) + 1, var.scsi_controller) : 1
 
   wait_for_guest_net_routable = var.wait_for_guest_net_routable
   wait_for_guest_ip_timeout   = var.wait_for_guest_ip_timeout
@@ -82,7 +97,7 @@ resource "vsphere_virtual_machine" "Linux" {
     for_each = var.network_cards
     content {
       network_id   = data.vsphere_network.network[network_interface.key].id
-      adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
+      adapter_type = var.network_type != null ? var.network_type[network_interface.key] : data.vsphere_virtual_machine.template.network_interface_types[0]
     }
   }
 
@@ -91,12 +106,13 @@ resource "vsphere_virtual_machine" "Linux" {
     for_each = data.vsphere_virtual_machine.template.disks
     iterator = template_disks
     content {
-      label            = "disk${template_disks.key}"
+      label            = length(var.disk_label) > 0 ? var.disk_label[template_disks.key] : "disk${template_disks.key}"
       size             = data.vsphere_virtual_machine.template.disks[template_disks.key].size
-      unit_number      = template_disks.key
+      unit_number      = var.scsi_controller != null ? var.scsi_controller * 15 + template_disks.key : template_disks.key
       thin_provisioned = data.vsphere_virtual_machine.template.disks[template_disks.key].thin_provisioned
       eagerly_scrub    = data.vsphere_virtual_machine.template.disks[template_disks.key].eagerly_scrub
       io_share_level   = var.io_share_level != null ? var.io_share_level[template_disks.key] : null
+      datastore_id     = var.disk_datastore != "" ? data.vsphere_datastore.disk_datastore[0].id : null
     }
   }
 
@@ -105,12 +121,13 @@ resource "vsphere_virtual_machine" "Linux" {
     for_each = var.data_disk_size_gb
     iterator = terraform_disks
     content {
-      label            = "disk${terraform_disks.key + local.template_disk_count}"
+      label            = length(var.data_disk_label) > 0 ? var.data_disk_label[terraform_disks.key] : "disk${terraform_disks.key + local.template_disk_count}"
       size             = var.data_disk_size_gb[terraform_disks.key]
-      unit_number      = terraform_disks.key + local.template_disk_count
+      unit_number      = length(var.data_disk_scsi_controller) > 0 ? var.data_disk_scsi_controller[terraform_disks.key] * 15 + terraform_disks.key + (var.scsi_controller == var.data_disk_scsi_controller[terraform_disks.key] ? local.template_disk_count : 0) : terraform_disks.key + local.template_disk_count
       thin_provisioned = var.thin_provisioned != null ? var.thin_provisioned[terraform_disks.key] : null
       eagerly_scrub    = var.eagerly_scrub != null ? var.eagerly_scrub[terraform_disks.key] : null
       io_share_level   = var.io_share_level != null ? var.io_share_level[terraform_disks.key] : null
+      datastore_id     = length(var.data_disk_datastore) > 0 ? data.vsphere_datastore.data_disk_datastore[var.data_disk_datastore[terraform_disks.key]].id : null
     }
   }
 
@@ -141,9 +158,9 @@ resource "vsphere_virtual_machine" "Linux" {
 }
 
 resource "vsphere_virtual_machine" "Windows" {
-  count = var.is_windows_image == "true" ? var.instances : 0
-
-  name = "%{if var.vmnameliteral != ""}${var.vmnameliteral}%{else}${var.vmname}${count.index + 1}${var.vmnamesuffix}%{endif}"
+  count      = var.is_windows_image == "true" ? var.instances : 0
+  depends_on = [var.vm_depends_on]
+  name       = "%{if var.vmnameliteral != ""}${var.vmnameliteral}%{else}${var.vmname}${count.index + 1}${var.vmnamesuffix}%{endif}"
 
   resource_pool_id  = data.vsphere_resource_pool.pool.id
   folder            = var.vmfolder
@@ -165,7 +182,8 @@ resource "vsphere_virtual_machine" "Windows" {
   memory                 = var.ram_size
   memory_hot_add_enabled = var.memory_hot_add_enabled
   guest_id               = data.vsphere_virtual_machine.template.guest_id
-  scsi_type              = data.vsphere_virtual_machine.template.scsi_type
+  scsi_type              = var.scsi_type != "" ? var.scsi_type : data.vsphere_virtual_machine.template.scsi_type
+  scsi_controller_count  = length(var.data_disk_scsi_controller) > 0 ? max(max(var.data_disk_scsi_controller...) + 1, var.scsi_controller) : 1
 
   wait_for_guest_net_routable = var.wait_for_guest_net_routable
   wait_for_guest_ip_timeout   = var.wait_for_guest_ip_timeout
@@ -175,7 +193,7 @@ resource "vsphere_virtual_machine" "Windows" {
     for_each = var.network_cards
     content {
       network_id   = data.vsphere_network.network[network_interface.key].id
-      adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
+      adapter_type = var.network_type != null ? var.network_type[network_interface.key] : data.vsphere_virtual_machine.template.network_interface_types[0]
     }
   }
 
@@ -184,12 +202,13 @@ resource "vsphere_virtual_machine" "Windows" {
     for_each = data.vsphere_virtual_machine.template.disks
     iterator = template_disks
     content {
-      label            = "disk${template_disks.key}"
+      label            = length(var.disk_label) > 0 ? var.disk_label[template_disks.key] : "disk${template_disks.key}"
       size             = data.vsphere_virtual_machine.template.disks[template_disks.key].size
-      unit_number      = template_disks.key
+      unit_number      = var.scsi_controller != null ? var.scsi_controller * 15 + template_disks.key : template_disks.key
       thin_provisioned = data.vsphere_virtual_machine.template.disks[template_disks.key].thin_provisioned
       eagerly_scrub    = data.vsphere_virtual_machine.template.disks[template_disks.key].eagerly_scrub
       io_share_level   = var.io_share_level != null ? var.io_share_level[template_disks.key] : null
+      datastore_id     = var.disk_datastore != "" ? data.vsphere_datastore.disk_datastore[0].id : null
     }
   }
 
@@ -198,12 +217,13 @@ resource "vsphere_virtual_machine" "Windows" {
     for_each = var.data_disk_size_gb
     iterator = terraform_disks
     content {
-      label            = "disk${terraform_disks.key + local.template_disk_count}"
+      label            = length(var.data_disk_label) > 0 ? var.data_disk_label[terraform_disks.key] : "disk${terraform_disks.key + local.template_disk_count}"
       size             = var.data_disk_size_gb[terraform_disks.key]
-      unit_number      = terraform_disks.key + local.template_disk_count
+      unit_number      = length(var.data_disk_scsi_controller) > 0 ? var.data_disk_scsi_controller[terraform_disks.key] * 15 + terraform_disks.key + (var.scsi_controller == var.data_disk_scsi_controller[terraform_disks.key] ? local.template_disk_count : 0) : terraform_disks.key + local.template_disk_count
       thin_provisioned = var.thin_provisioned != null ? var.thin_provisioned[terraform_disks.key] : null
       eagerly_scrub    = var.eagerly_scrub != null ? var.eagerly_scrub[terraform_disks.key] : null
       io_share_level   = var.io_share_level != null ? var.io_share_level[terraform_disks.key] : null
+      datastore_id     = length(var.data_disk_datastore) > 0 ? data.vsphere_datastore.data_disk_datastore[var.data_disk_datastore[terraform_disks.key]].id : null
     }
   }
 
