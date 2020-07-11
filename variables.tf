@@ -166,6 +166,12 @@ variable "data_disk_label" {
   default     = []
 }
 
+variable "disk_size_gb" {
+  description = "List of Storage disk size"
+  type        = list
+  default     = []
+}
+
 variable "data_disk_size_gb" {
   description = "List of Storage data disk size"
   type        = list
