@@ -1,10 +1,8 @@
 # Terraform vSphere Module
 
-![Terraform Version](https://img.shields.io/badge/Terraform-0.12.6-green.svg) [![TF Registry](https://img.shields.io/badge/terraform-registry-blue.svg)](https://registry.terraform.io/modules/Terraform-VMWare-Modules/vm/vsphere/) [![Changelog](https://img.shields.io/badge/changelog-release-green.svg)](https://github.com/Terraform-VMWare-Modules/terraform-vsphere-vm/releases) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) 
+![Terraform Version](https://img.shields.io/badge/Terraform-0.12.6-green.svg) [![TF Registry](https://img.shields.io/badge/terraform-registry-blue.svg)](https://registry.terraform.io/modules/Terraform-VMWare-Modules/vm/vsphere/) [![Changelog](https://img.shields.io/badge/changelog-release-green.svg)](https://github.com/Terraform-VMWare-Modules/terraform-vsphere-vm/releases) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 For Virtual Machine Provisioning with (Linux/Windows) customization. Thanks to the new enhancements introduced in Terraform v0.12.6 this module include most of the advance features that are available in the resource `vsphere_virtual_machine`.
-
-:warning: The new version of this module only works with terraform version 0.12.6 and above :warning:
 
 ## Deploys (Single/Multiple) Virtual Machines to your vSphere environment
 
@@ -22,6 +20,7 @@ This Terraform module deploys single or multiple virtual machines of type (Linux
 - Ability to configure advance features for the vm.
 - Ability to deploy either a datastore or a datastore cluster.
 - Ability to enable cpu and memory hot plug features for the VM.
+- Ability to enable cpu and memory reservations for the VM.
 - Ability to define different datastores for data disks.
 - Ability to define different scsi_controllers per disk, including data disks.
 - Ability to define network type per interface and disk label per attached disk.
@@ -38,10 +37,10 @@ You can also download the entire module and use your own predefined variables to
 ```hcl
 module "example-server-linuxvm" {
   source        = "Terraform-VMWare-Modules/vm/vsphere"
-  version       = "1.3.0"
+  version       = "X.X.X"
   vmtemp        = "TemplateName"
   instances     = 1
-  vmname        = "example-server-windows"
+  vmname        = "example-server-linux"
   vmrp          = "esxi/Resources"
   network_cards = ["Name of the Port Group in vSphere"]
   ipv4 = {
@@ -53,9 +52,9 @@ module "example-server-linuxvm" {
 
 module "example-server-windowsvm" {
   source           = "Terraform-VMWare-Modules/vm/vsphere"
-  version          = "1.2.0"
+  version          = "X.X.X"
   vmtemp           = "TemplateName"
-  is_windows_image = "true"
+  is_windows_image = true
   instances        = 1
   vmname           = "example-server-windows"
   vmrp             = "esxi/Resources"
@@ -76,7 +75,7 @@ There are number of switches defined in the module, where you can use to enable 
 
 ### Main Feature Switches
 
-- You can use `is_windows_image = "true"` to set the customization type to Windows (By default it is set to Linux customization)
+- You can use `is_windows_image = true` to set the customization type to Windows (By default it is set to Linux customization)
 - You can use `data_disk_size_gb = [20,30]` to add additional data disks (Supported in both Linux and Windows deployment)
   - Above switch will create two additional disk of capacity 10 and 30gb for the VM.
   - You can include `thin_provisioned` switch to define disk type for each additional disk.
@@ -91,7 +90,7 @@ Below is an example of windows deployment with some of the available feature set
 ```hcl
 module "example-server-windowsvm-advanced" {
   source                 = "Terraform-VMWare-Modules/vm/vsphere"
-  version                = "1.3.0"
+  version                = "X.X.X"
   dc                     = "Datacenter"
   vmrp                   = "cluster/Resources" #Works with ESXi/Resources
   vmfolder               = "Cattle"
@@ -100,9 +99,11 @@ module "example-server-windowsvm-advanced" {
   instances              = 2
   cpu_number             = 2
   ram_size               = 2096
-  cpu_hot_add_enabled    = "true"
-  cpu_hot_remove_enabled = "true"
-  memory_hot_add_enabled = "true"
+  cpu_reservation        = 2000
+  memory_reservation     = 2000
+  cpu_hot_add_enabled    = true
+  cpu_hot_remove_enabled = true
+  memory_hot_add_enabled = true
   vmname                 = "AdvancedVM"
   vmdomain               = "somedomain.com"
   network_cards          = ["VM Network", "test-network"] #Assign multiple cards
@@ -113,11 +114,12 @@ module "example-server-windowsvm-advanced" {
     "test"       = ["", "192.168.0.3"]
   }
   data_disk_size_gb = [10, 5] // Aditional Disk to be used
-  thin_provisioned  = ["true", "false"]
+  thin_provisioned  = [true, false]
   disk_label                = ["tpl-disk-1"]
   data_disk_label           = ["label1", "label2"]
   disk_datastore             = "vsanDatastore" // This will store Template disk in the defined disk_datastore
   data_disk_datastore        = ["vsanDatastore", "nfsDatastore"] // Datastores for additional data disks
+  scsi_bus_sharing          = "physicalSharing" // The modes are physicalSharing, virtualSharing, and noSharing
   scsi_type                 = "lsilogic" // Other acceptable value "pvscsi"
   scsi_controller           = 0 // This will assign OS disk to controller 0
   data_disk_scsi_controller = [0, 1] // This will create a new controller and assign second data disk to controller 1
@@ -127,12 +129,12 @@ module "example-server-windowsvm-advanced" {
     "terraform-test-category"    = "terraform-test-tag"
     "terraform-test-category-02" = "terraform-test-tag-02"
   }
-  enable_disk_uuid = "true"
-  auto_logon       = "true"
+  enable_disk_uuid = true
+  auto_logon       = true
   run_once         = ["command01", "command02"] // You can also run Powershell commands
   orgname          = "Terraform-Module"
   workgroup        = "Module-Test"
-  is_windows_image = "true"
+  is_windows_image = true
   firmware         = "efi"
   local_adminpass  = "Password@Strong"
 }

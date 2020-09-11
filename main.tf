@@ -45,14 +45,14 @@ data "vsphere_virtual_machine" "template" {
 data "vsphere_tag_category" "category" {
   count      = var.tags != null ? length(var.tags) : 0
   name       = keys(var.tags)[count.index]
-  depends_on = [var.vm_depends_on]
+  depends_on = [var.tag_depends_on]
 }
 
 data "vsphere_tag" "tag" {
   count       = var.tags != null ? length(var.tags) : 0
   name        = var.tags[keys(var.tags)[count.index]]
   category_id = "${data.vsphere_tag_category.category[count.index].id}"
-  depends_on  = [var.vm_depends_on]
+  depends_on  = [var.tag_depends_on]
 }
 
 locals {
@@ -62,13 +62,13 @@ locals {
 
 // Cloning a Linux VM from a given template. Note: This is the default option!!
 resource "vsphere_virtual_machine" "Linux" {
-  count      = var.is_windows_image != "true" ? var.instances : 0
+  count      = var.is_windows_image ? 0 : var.instances
   depends_on = [var.vm_depends_on]
   name       = "%{if var.vmnameliteral != ""}${var.vmnameliteral}%{else}${var.vmname}${count.index + 1}${var.vmnamesuffix}%{endif}"
 
   resource_pool_id  = data.vsphere_resource_pool.pool.id
   folder            = var.vmfolder
-  tags              = data.vsphere_tag.tag[*].id
+  tags              = var.tag_ids != null ? var.tag_ids : data.vsphere_tag.tag[*].id
   custom_attributes = var.custom_attributes
   annotation        = var.annotation
   extra_config      = var.extra_config
@@ -83,9 +83,12 @@ resource "vsphere_virtual_machine" "Linux" {
   cpu_hot_add_enabled    = var.cpu_hot_add_enabled
   cpu_hot_remove_enabled = var.cpu_hot_remove_enabled
   cpu_share_level        = var.cpu_share_level
+  cpu_reservation        = var.cpu_reservation
+  memory_reservation     = var.memory_reservation 
   memory                 = var.ram_size
   memory_hot_add_enabled = var.memory_hot_add_enabled
   guest_id               = data.vsphere_virtual_machine.template.guest_id
+  scsi_bus_sharing       = var.scsi_bus_sharing
   scsi_type              = var.scsi_type != "" ? var.scsi_type : data.vsphere_virtual_machine.template.scsi_type
   scsi_controller_count  = length(var.data_disk_scsi_controller) > 0 ? max(max(var.data_disk_scsi_controller...) + 1, var.scsi_controller) : 1
 
@@ -158,13 +161,13 @@ resource "vsphere_virtual_machine" "Linux" {
 }
 
 resource "vsphere_virtual_machine" "Windows" {
-  count      = var.is_windows_image == "true" ? var.instances : 0
+  count      = var.is_windows_image ? var.instances : 0
   depends_on = [var.vm_depends_on]
   name       = "%{if var.vmnameliteral != ""}${var.vmnameliteral}%{else}${var.vmname}${count.index + 1}${var.vmnamesuffix}%{endif}"
 
   resource_pool_id  = data.vsphere_resource_pool.pool.id
   folder            = var.vmfolder
-  tags              = data.vsphere_tag.tag[*].id
+  tags              = var.tag_ids != null ? var.tag_ids : data.vsphere_tag.tag[*].id
   custom_attributes = var.custom_attributes
   annotation        = var.annotation
   extra_config      = var.extra_config
@@ -179,9 +182,12 @@ resource "vsphere_virtual_machine" "Windows" {
   cpu_hot_add_enabled    = var.cpu_hot_add_enabled
   cpu_hot_remove_enabled = var.cpu_hot_remove_enabled
   cpu_share_level        = var.cpu_share_level
+  cpu_reservation        = var.cpu_reservation
+  memory_reservation     = var.memory_reservation 
   memory                 = var.ram_size
   memory_hot_add_enabled = var.memory_hot_add_enabled
   guest_id               = data.vsphere_virtual_machine.template.guest_id
+  scsi_bus_sharing       = var.scsi_bus_sharing
   scsi_type              = var.scsi_type != "" ? var.scsi_type : data.vsphere_virtual_machine.template.scsi_type
   scsi_controller_count  = length(var.data_disk_scsi_controller) > 0 ? max(max(var.data_disk_scsi_controller...) + 1, var.scsi_controller) : 1
 

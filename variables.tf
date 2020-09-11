@@ -32,6 +32,11 @@ variable "cpu_share_level" {
   default     = null
 }
 
+variable "cpu_reservation" {
+  description = "The amount of CPU (in MHz) that this virtual machine is guaranteed."
+  default     = null
+}
+
 variable "ram_size" {
   description = "VM RAM size in megabytes"
   default     = 4096
@@ -88,8 +93,14 @@ variable "vmdns" {
 
 #Global Customization Variables
 variable "tags" {
-  description = "The names of any tags to attach to this resource. They shoud already exist"
+  description = "The names of any tags to attach to this resource. They must already exist."
   type        = map
+  default     = null
+}
+
+variable "tag_ids" {
+  description = "The ids of any tags to attach to this resource. They must already exist."
+  type        = list
   default     = null
 }
 
@@ -141,16 +152,24 @@ variable "num_cores_per_socket" {
 
 variable "cpu_hot_add_enabled" {
   description = "Allow CPUs to be added to this virtual machine while it is running."
+  type        = bool
   default     = null
 }
 
 variable "cpu_hot_remove_enabled" {
   description = "Allow CPUs to be removed to this virtual machine while it is running."
+  type        = bool
   default     = null
 }
 
 variable "memory_hot_add_enabled" {
   description = "Allow memory to be added to this virtual machine while it is running."
+  type        = bool
+  default     = null
+}
+
+variable "memory_reservation" {
+  description = "The amount of memory (in MB) that this virtual machine is guaranteed."
   default     = null
 }
 
@@ -203,6 +222,13 @@ variable "data_disk_scsi_controller" {
   #       error_message = "The scsi_controller must be between 0 and 3"
   # }
 }
+
+variable "scsi_bus_sharing" {
+  description = "scsi_bus_sharing mode, acceptable values physicalSharing,virtualSharing,noSharing"
+  type        = string
+  default     = null
+}
+
 variable "scsi_type" {
   description = "scsi_controller type, acceptable values lsilogic,pvscsi "
   type        = string
@@ -239,6 +265,7 @@ variable "io_share_level" {
 
 variable "enable_disk_uuid" {
   description = "Expose the UUIDs of attached virtual disks to the virtual machine, allowing access to them in the guest."
+  type        = bool
   default     = null
 }
 
@@ -251,6 +278,7 @@ variable "network_type" {
 #Linux Customization Variables
 variable "hw_clock_utc" {
   description = "Tells the operating system that the hardware clock is set to UTC"
+  type        = bool
   default     = true
 }
 
@@ -263,6 +291,7 @@ variable "vmdomain" {
 #Windows Customization Variables
 variable "is_windows_image" {
   description = "Boolean flag to notify when the custom image is windows based."
+  type        = bool
   default     = false
 }
 
@@ -298,6 +327,7 @@ variable "orgname" {
 
 variable "auto_logon" {
   description = " Specifies whether or not the VM automatically logs on as Administrator. Default: false"
+  type = bool
   default     = null
 }
 
@@ -329,24 +359,30 @@ variable "full_name" {
 
 variable "wait_for_guest_net_routable" {
   description = "Controls whether or not the guest network waiter waits for a routable address. When false, the waiter does not wait for a default gateway, nor are IP addresses checked against any discovered default gateways as part of its success criteria. This property is ignored if the wait_for_guest_ip_timeout waiter is used."
-  default     = true
   type        = bool
+  default     = true
 }
 
 variable "wait_for_guest_ip_timeout" {
   description = "The amount of time, in minutes, to wait for an available guest IP address on this virtual machine. This should only be used if your version of VMware Tools does not allow the wait_for_guest_net_timeout waiter to be used. A value less than 1 disables the waiter."
-  default     = 0
   type        = number
+  default     = 0
 }
 
 variable "wait_for_guest_net_timeout" {
   description = "The amount of time, in minutes, to wait for an available IP address on this virtual machine's NICs. Older versions of VMware Tools do not populate this property. In those cases, this waiter can be disabled and the wait_for_guest_ip_timeout waiter can be used instead. A value less than 1 disables the waiter."
-  default     = 5
   type        = number
+  default     = 5
 }
 
 variable "vm_depends_on" {
   description = "Add any external depend on module here like vm_depends_on = [module.fw_core01.firewall]"
+  type        = any
+  default     = null
+}
+
+variable "tag_depends_on" {
+  description = "Add any external depend on module here like tag_depends_on = [vsphere_tag.foo.id]"
   type        = any
   default     = null
 }
