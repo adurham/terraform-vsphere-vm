@@ -127,6 +127,7 @@ resource "vsphere_virtual_machine" "Linux" {
       unit_number      = lookup(terraform_disks.value, "data_disk_scsi_controller", 0) ? terraform_disks.value.data_disk_scsi_controller * 15 + index(keys(var.data_disk), terraform_disks.key) + (var.scsi_controller == tonumber(terraform_disks.value["data_disk_scsi_controller"]) ? local.template_disk_count : 0) : index(keys(var.data_disk), terraform_disks.key) + local.template_disk_count
       thin_provisioned = lookup(terraform_disks.value, "thin_provisioned", "true")
       eagerly_scrub    = lookup(terraform_disks.value, "eagerly_scrub", "false")
+      io_share_level   = lookup(terraform_disks.value, "io_share_level", null)
       datastore_id     = lookup(terraform_disks.value, "datastore_id", null)
     }
   }
@@ -242,6 +243,7 @@ resource "vsphere_virtual_machine" "Windows" {
       unit_number      = lookup(terraform_disks.value, "data_disk_scsi_controller", 0) ? terraform_disks.value.data_disk_scsi_controller * 15 + index(keys(var.data_disk), terraform_disks.key) + (var.scsi_controller == tonumber(terraform_disks.value["data_disk_scsi_controller"]) ? local.template_disk_count : 0) : index(keys(var.data_disk), terraform_disks.key) + local.template_disk_count
       thin_provisioned = lookup(terraform_disks.value, "thin_provisioned", "true")
       eagerly_scrub    = lookup(terraform_disks.value, "eagerly_scrub", "false")
+      io_share_level   = lookup(terraform_disks.value, "io_share_level", null)
       datastore_id     = lookup(terraform_disks.value, "datastore_id", null)
     }
   }
