@@ -86,6 +86,12 @@ variable "io_share_level" {
   default     = null
 }
 
+variable "thin_provisioned" {
+  description = "If true, this disk is thin provisioned, with space for the file being allocated on an as-needed basis."
+  type        = list
+  default     = null
+}
+
 variable "vmname" {
   description = "The name of the virtual machine used to deploy the vms."
   default     = "terraformvm"
