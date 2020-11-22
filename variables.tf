@@ -115,6 +115,11 @@ variable "cpu_number" {
   default     = 2
 }
 
+variable "cpu_share_level" {
+  description = "If true, set the level of CPU Shares."
+  default     = null
+}
+
 variable "cpu_reservation" {
   description = "The amount of CPU (in MHz) that this virtual machine is guaranteed."
   default     = null
