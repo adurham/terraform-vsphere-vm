@@ -1,3 +1,91 @@
+#Network Section
+variable "network" {
+  description = "Define PortGroup and IPs for each VM"
+  type        = map(list(string))
+  default     = {}
+}
+
+variable "network_type" {
+  description = "Define network type for each network interface."
+  type        = list
+  default     = null
+}
+
+variable "ipv4submask" {
+  description = "ipv4 Subnet mask."
+  type        = list
+  default     = ["24"]
+}
+
+#Data Disk section
+variable "datastore_cluster" {
+  description = "Datastore cluster to deploy the VM."
+  default     = ""
+}
+
+variable "datastore" {
+  description = "Datastore to deploy the VM."
+  default     = ""
+}
+
+variable "data_disk" {
+  description = "Storage data disk parameter, example"
+  type        = map(map(string))
+  default     = {}
+}
+
+variable "disk_label" {
+  description = "Storage data disk labels."
+  type        = list
+  default     = []
+}
+
+variable "disk_size_gb" {
+  description = "List of disk sizes to override template disk size."
+  type        = list
+  default     = null
+}
+
+variable "disk_datastore" {
+  description = "Define where the OS disk should be stored."
+  type        = string
+  default     = ""
+}
+
+variable "scsi_bus_sharing" {
+  description = "scsi_bus_sharing mode, acceptable values physicalSharing,virtualSharing,noSharing."
+  type        = string
+  default     = null
+}
+
+variable "scsi_type" {
+  description = "scsi_controller type, acceptable values lsilogic,pvscsi."
+  type        = string
+  default     = ""
+}
+
+variable "scsi_controller" {
+  description = "scsi_controller number for the main OS disk."
+  type        = number
+  default     = 0
+  # validation {
+  #   condition     = var.scsi_controller < 4 && var.scsi_controller > -1
+  #       error_message = "The scsi_controller must be between 0 and 3"
+  # }
+}
+
+variable "enable_disk_uuid" {
+  description = "Expose the UUIDs of attached virtual disks to the virtual machine, allowing access to them in the guest."
+  type        = bool
+  default     = null
+}
+
+variable "io_share_level" {
+  description = "If true, this disk will get the io_share_level that is set."
+  type        = list
+  default     = null
+}
+
 variable "vmname" {
   description = "The name of the virtual machine used to deploy the vms."
   default     = "terraformvm"
@@ -27,35 +115,15 @@ variable "cpu_number" {
   default     = 2
 }
 
-variable "cpu_share_level" {
-  description = "If true, set the level of CPU Shares."
-  default     = null
-}
-
 variable "cpu_reservation" {
   description = "The amount of CPU (in MHz) that this virtual machine is guaranteed."
   default     = null
 }
 
+
 variable "ram_size" {
   description = "VM RAM size in megabytes."
   default     = 4096
-}
-
-variable "network_cards" {
-  description = ""
-  type        = list(string)
-}
-
-variable "ipv4" {
-  description = "host(VM) IP address in map format, support more than one IP. Should correspond to number of instances."
-  type        = map
-}
-
-variable "ipv4submask" {
-  description = "ipv4 Subnet mask."
-  type        = list
-  default     = ["24"]
 }
 
 variable "dc" {
@@ -64,16 +132,6 @@ variable "dc" {
 
 variable "vmrp" {
   description = "Cluster resource pool that VM will be deployed to. you use following to choose default pool in the cluster (esxi1) or (Cluster)/Resources."
-}
-
-variable "ds_cluster" {
-  description = "Datastore cluster to deploy the VM."
-  default     = ""
-}
-
-variable "datastore" {
-  description = "Datastore to deploy the VM."
-  default     = ""
 }
 
 variable "vmfolder" {
@@ -173,107 +231,6 @@ variable "memory_reservation" {
   default     = null
 }
 
-variable "disk_label" {
-  description = "Storage data disk labels."
-  type        = list
-  default     = []
-}
-
-variable "data_disk_label" {
-  description = "Storage data disk labels."
-  type        = list
-  default     = []
-}
-
-variable "disk_size_gb" {
-  description = "List of Storage disk size"
-  type        = list
-  default     = []
-}
-
-variable "data_disk_size_gb" {
-  description = "List of Storage data disk size."
-  type        = list
-  default     = []
-}
-
-variable "disk_datastore" {
-  description = "Define where the OS disk should be stored."
-  type        = string
-  default     = ""
-}
-
-variable "data_disk_datastore" {
-  description = "Define where the data disk should be stored, should be equal to number of defined data disks."
-  type        = list
-  default     = []
-  # validation {
-  #   condition     = length(var.disk_datastore) == 0 || length(var.disk_datastore) == length(var.data_disk_size_gb)
-  #       error_message = "The list of disk datastore must be equal in length to disk_size_gb"
-  # }
-}
-
-variable "data_disk_scsi_controller" {
-  description = "scsi_controller number for the data disk, should be equal to number of defined data disk."
-  type        = list
-  default     = []
-  # validation {
-  #   condition     = max(var.data_disk_scsi_controller...) < 4 && max(var.data_disk_scsi_controller...) > -1
-  #       error_message = "The scsi_controller must be between 0 and 3"
-  # }
-}
-
-variable "scsi_bus_sharing" {
-  description = "scsi_bus_sharing mode, acceptable values physicalSharing,virtualSharing,noSharing."
-  type        = string
-  default     = null
-}
-
-variable "scsi_type" {
-  description = "scsi_controller type, acceptable values lsilogic,pvscsi."
-  type        = string
-  default     = ""
-}
-
-variable "scsi_controller" {
-  description = "scsi_controller number for the main OS disk."
-  type        = number
-  default     = 0
-  # validation {
-  #   condition     = var.scsi_controller < 4 && var.scsi_controller > -1
-  #       error_message = "The scsi_controller must be between 0 and 3"
-  # }
-}
-
-variable "thin_provisioned" {
-  description = "If true, this disk is thin provisioned, with space for the file being allocated on an as-needed basis."
-  type        = list
-  default     = null
-}
-
-variable "eagerly_scrub" {
-  description = "if set to true, the disk space is zeroed out on VM creation. This will delay the creation of the disk or virtual machine. Cannot be set to true when thin_provisioned is true."
-  type        = list
-  default     = null
-}
-
-variable "io_share_level" {
-  description = "If true, this disk will get the io_share_level that is set."
-  type        = list
-  default     = null
-}
-
-variable "enable_disk_uuid" {
-  description = "Expose the UUIDs of attached virtual disks to the virtual machine, allowing access to them in the guest."
-  type        = bool
-  default     = null
-}
-
-variable "network_type" {
-  description = "Define network type for each network interface."
-  type        = list
-  default     = null
-}
 
 #Linux Customization Variables
 variable "hw_clock_utc" {
@@ -327,7 +284,7 @@ variable "orgname" {
 
 variable "auto_logon" {
   description = " Specifies whether or not the VM automatically logs on as Administrator. Default: false."
-  type = bool
+  type        = bool
   default     = null
 }
 
