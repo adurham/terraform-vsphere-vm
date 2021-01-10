@@ -80,12 +80,18 @@ variable "enable_disk_uuid" {
   default     = null
 }
 
-variable "storage_policy_id" {
-  description = "(Optional) The UUID of the storage policy to assign to VM home directory."
+variable "io_share_level" {
+  description = "If true, this disk will get the io_share_level that is set."
+  type        = list
   default     = null
 }
 
-###########################################
+variable "thin_provisioned" {
+  description = "If true, this disk is thin provisioned, with space for the file being allocated on an as-needed basis."
+  type        = list
+  default     = null
+}
+
 variable "vmname" {
   description = "The name of the virtual machine used to deploy the vms."
   default     = "terraformvm"
@@ -113,6 +119,11 @@ variable "instances" {
 variable "cpu_number" {
   description = "number of CPU (core per CPU) for the VM."
   default     = 2
+}
+
+variable "cpu_share_level" {
+  description = "If true, set the level of CPU Shares."
+  default     = null
 }
 
 variable "cpu_reservation" {

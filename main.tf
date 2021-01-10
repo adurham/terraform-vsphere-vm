@@ -77,6 +77,7 @@ resource "vsphere_virtual_machine" "Linux" {
   num_cores_per_socket   = var.num_cores_per_socket
   cpu_hot_add_enabled    = var.cpu_hot_add_enabled
   cpu_hot_remove_enabled = var.cpu_hot_remove_enabled
+  cpu_share_level        = var.cpu_share_level
   cpu_reservation        = var.cpu_reservation
   memory_reservation     = var.memory_reservation
   memory                 = var.ram_size
@@ -127,6 +128,7 @@ resource "vsphere_virtual_machine" "Linux" {
       unit_number      = lookup(terraform_disks.value, "data_disk_scsi_controller", 0) ? terraform_disks.value.data_disk_scsi_controller * 15 + index(keys(var.data_disk), terraform_disks.key) + (var.scsi_controller == tonumber(terraform_disks.value["data_disk_scsi_controller"]) ? local.template_disk_count : 0) : index(keys(var.data_disk), terraform_disks.key) + local.template_disk_count
       thin_provisioned = lookup(terraform_disks.value, "thin_provisioned", "true")
       eagerly_scrub    = lookup(terraform_disks.value, "eagerly_scrub", "false")
+      io_share_level   = lookup(terraform_disks.value, "io_share_level", null)
       datastore_id     = lookup(terraform_disks.value, "datastore_id", null)
     }
   }
@@ -189,6 +191,7 @@ resource "vsphere_virtual_machine" "Windows" {
   num_cores_per_socket   = var.num_cores_per_socket
   cpu_hot_add_enabled    = var.cpu_hot_add_enabled
   cpu_hot_remove_enabled = var.cpu_hot_remove_enabled
+  cpu_share_level        = var.cpu_share_level
   cpu_reservation        = var.cpu_reservation
   memory_reservation     = var.memory_reservation
   memory                 = var.ram_size
@@ -241,6 +244,7 @@ resource "vsphere_virtual_machine" "Windows" {
       unit_number      = lookup(terraform_disks.value, "data_disk_scsi_controller", 0) ? terraform_disks.value.data_disk_scsi_controller * 15 + index(keys(var.data_disk), terraform_disks.key) + (var.scsi_controller == tonumber(terraform_disks.value["data_disk_scsi_controller"]) ? local.template_disk_count : 0) : index(keys(var.data_disk), terraform_disks.key) + local.template_disk_count
       thin_provisioned = lookup(terraform_disks.value, "thin_provisioned", "true")
       eagerly_scrub    = lookup(terraform_disks.value, "eagerly_scrub", "false")
+      io_share_level   = lookup(terraform_disks.value, "io_share_level", null)
       datastore_id     = lookup(terraform_disks.value, "datastore_id", null)
     }
   }
