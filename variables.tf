@@ -80,6 +80,11 @@ variable "enable_disk_uuid" {
   default     = null
 }
 
+variable "storage_policy_id" {
+  description = "(Optional) The UUID of the storage policy to assign to VM home directory."
+  default     = null
+}
+
 variable "io_share_level" {
   description = "If true, this disk will get the io_share_level that is set."
   type        = list
@@ -92,6 +97,7 @@ variable "thin_provisioned" {
   default     = null
 }
 
+###########################################
 variable "vmname" {
   description = "The name of the virtual machine used to deploy the vms."
   default     = "terraformvm"
